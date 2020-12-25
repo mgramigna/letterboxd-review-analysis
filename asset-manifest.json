@@ -1,22 +1,22 @@
 {
   "files": {
     "main.css": "/letterboxd-review-analysis/static/css/main.6dea0f05.chunk.css",
-    "main.js": "/letterboxd-review-analysis/static/js/main.ab8ed4f3.chunk.js",
-    "main.js.map": "/letterboxd-review-analysis/static/js/main.ab8ed4f3.chunk.js.map",
+    "main.js": "/letterboxd-review-analysis/static/js/main.87c131f5.chunk.js",
+    "main.js.map": "/letterboxd-review-analysis/static/js/main.87c131f5.chunk.js.map",
     "runtime-main.js": "/letterboxd-review-analysis/static/js/runtime-main.668e0782.js",
     "runtime-main.js.map": "/letterboxd-review-analysis/static/js/runtime-main.668e0782.js.map",
-    "static/js/2.3be55fe9.chunk.js": "/letterboxd-review-analysis/static/js/2.3be55fe9.chunk.js",
-    "static/js/2.3be55fe9.chunk.js.map": "/letterboxd-review-analysis/static/js/2.3be55fe9.chunk.js.map",
+    "static/js/2.d2707a80.chunk.js": "/letterboxd-review-analysis/static/js/2.d2707a80.chunk.js",
+    "static/js/2.d2707a80.chunk.js.map": "/letterboxd-review-analysis/static/js/2.d2707a80.chunk.js.map",
     "static/js/3.dc5dc24e.chunk.js": "/letterboxd-review-analysis/static/js/3.dc5dc24e.chunk.js",
     "static/js/3.dc5dc24e.chunk.js.map": "/letterboxd-review-analysis/static/js/3.dc5dc24e.chunk.js.map",
     "index.html": "/letterboxd-review-analysis/index.html",
     "static/css/main.6dea0f05.chunk.css.map": "/letterboxd-review-analysis/static/css/main.6dea0f05.chunk.css.map",
-    "static/js/2.3be55fe9.chunk.js.LICENSE.txt": "/letterboxd-review-analysis/static/js/2.3be55fe9.chunk.js.LICENSE.txt"
+    "static/js/2.d2707a80.chunk.js.LICENSE.txt": "/letterboxd-review-analysis/static/js/2.d2707a80.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.668e0782.js",
-    "static/js/2.3be55fe9.chunk.js",
+    "static/js/2.d2707a80.chunk.js",
     "static/css/main.6dea0f05.chunk.css",
-    "static/js/main.ab8ed4f3.chunk.js"
+    "static/js/main.87c131f5.chunk.js"
   ]
 }
