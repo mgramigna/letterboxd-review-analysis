@@ -1,9 +1,12 @@
 import { CircularProgress, Grid, IconButton, InputAdornment, TextField } from '@material-ui/core';
 import React, { useState } from 'react';
 import Sentiment from 'sentiment';
-import { DiaryEntry, DiaryEntryType, Review, ReviewSentiment } from './types';
-import MovieReview from './components/MovieReview';
 import { Search } from '@material-ui/icons';
+import ReactWordcloud, { Word } from 'react-wordcloud';
+import countWords from 'count-words';
+import common from 'common-words';
+import MovieReview from './components/MovieReview';
+import { DiaryEntry, DiaryEntryType, Review, ReviewSentiment } from './types';
 
 function App() {
   const [username, setUsername] = useState<string>('');
@@ -11,6 +14,7 @@ function App() {
   const [individualSentiments, setIndividualSentiments] = useState<ReviewSentiment[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [wordCloud, setWordCloud] = useState<Word[]>([]);
 
   const handleTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUsername(event.target.value);
@@ -43,8 +47,23 @@ function App() {
           published: d.date.published
         }));
 
+        const overallText = reviews.map(r => r.review).join(' ');
+        const filteredOverallText = removeCommonWords(overallText.split(' ')).map(w =>
+          w
+            .replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, '')
+            .replace(/\s/g, '')
+            .toLowerCase()
+        );
+        console.log('filteredOverallText: ', filteredOverallText);
+
+        const wordCountObj = countWords(filteredOverallText.join(' '), true);
+        const words: Word[] = Object.entries(wordCountObj).map(([word, count]) => ({
+          text: word.toLowerCase(),
+          value: count
+        }));
+
         const sentiment = new Sentiment();
-        const overall = sentiment.analyze(reviews.map(r => r.review).join(' '));
+        const overall = sentiment.analyze(overallText);
         const indivSentiments: ReviewSentiment[] = reviews.map(r => ({
           review: r,
           sentiment: sentiment.analyze(r.review)
@@ -53,11 +72,22 @@ function App() {
         setOverallSentiment(overall);
         setIndividualSentiments(indivSentiments);
         setLoading(false);
+        setWordCloud(words.filter(w => w.text.length > 3));
       }
     } catch (e) {
       setError(e.message);
       setLoading(false);
     }
+  };
+
+  const removeCommonWords = (words: string[]) => {
+    common.forEach(obj => {
+      const { word } = obj;
+      while (words.indexOf(word) !== -1) {
+        words.splice(words.indexOf(word), 1);
+      }
+    });
+    return words;
   };
 
   return (
@@ -93,6 +123,14 @@ function App() {
               Comparative: {overallSentiment.comparative}
             </Grid>
           </>
+        )}
+        {!loading && (
+          <ReactWordcloud
+            words={wordCloud}
+            options={{
+              fontSizes: [8, 64]
+            }}
+          />
         )}
         {loading && <CircularProgress />}
       </Grid>
