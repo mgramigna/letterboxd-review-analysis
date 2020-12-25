@@ -1,25 +1,83 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { Grid, IconButton, InputAdornment, TextField } from '@material-ui/core';
+import React, { useState } from 'react';
+import Sentiment from 'sentiment';
+import { DiaryEntry, DiaryEntryType, Review, ReviewSentiment } from './types';
+import MovieReview from './components/MovieReview';
+import { Search } from '@material-ui/icons';
 
 function App() {
+  const [username, setUsername] = useState<string>('');
+  const [overallSentiment, setOverallSentiment] = useState<Sentiment.AnalysisResult | null>(null);
+  const [individualSentiments, setIndividualSentiments] = useState<ReviewSentiment[]>([]);
+
+  const handleTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setUsername(event.target.value);
+  };
+
+  const handleButtonClick = async () => {
+    const res = await fetch(`https://letterboxd-rss-wrapper.herokuapp.com/rss?user=${username}`);
+    const diaryJSON = (await res.json()) as DiaryEntry[];
+    const filteredDiary = diaryJSON.filter(d => d.type === DiaryEntryType.DIARY && d.review);
+
+    const reviews: Review[] = filteredDiary.map(d => ({
+      entry: d,
+      movie: d.film.title,
+      review: d.review?.replace('\n', ' ') || '',
+      published: d.date.published
+    }));
+
+    const sentiment = new Sentiment();
+    const overall = sentiment.analyze(reviews.map(r => r.review).join(' '));
+    const indivSentiments: ReviewSentiment[] = reviews.map(r => ({
+      review: r,
+      sentiment: sentiment.analyze(r.review)
+    }));
+
+    setOverallSentiment(overall);
+    setIndividualSentiments(indivSentiments);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <Grid container direction="column" justify="center" alignItems="center">
+        <Grid item xs>
+          <TextField
+            value={username}
+            onChange={handleTextChange}
+            label="Username"
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton aria-label="search" onClick={handleButtonClick}>
+                    <Search />
+                  </IconButton>
+                </InputAdornment>
+              )
+            }}
+          />
+        </Grid>
+        {overallSentiment && (
+          <>
+            <Grid item xs>
+              Overall: {overallSentiment.score}
+            </Grid>
+            <Grid item xs>
+              Comparative: {overallSentiment.comparative}
+            </Grid>
+          </>
+        )}
+      </Grid>
+      <Grid container direction="column" justify="center">
+        {individualSentiments.map(is => {
+          const key = `${is.review.movie}-${is.review.published}`;
+          return (
+            <Grid item xs key={key}>
+              <MovieReview reviewSentiment={is} />
+            </Grid>
+          );
+        })}
+      </Grid>
+    </>
   );
 }
 
