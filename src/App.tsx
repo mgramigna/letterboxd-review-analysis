@@ -1,4 +1,4 @@
-import { Grid, IconButton, InputAdornment, TextField } from '@material-ui/core';
+import { CircularProgress, Grid, IconButton, InputAdornment, TextField } from '@material-ui/core';
 import React, { useState } from 'react';
 import Sentiment from 'sentiment';
 import { DiaryEntry, DiaryEntryType, Review, ReviewSentiment } from './types';
@@ -10,6 +10,7 @@ function App() {
   const [overallSentiment, setOverallSentiment] = useState<Sentiment.AnalysisResult | null>(null);
   const [individualSentiments, setIndividualSentiments] = useState<ReviewSentiment[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const handleTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUsername(event.target.value);
@@ -19,15 +20,18 @@ function App() {
     setOverallSentiment(null);
     setIndividualSentiments([]);
     setError(null);
+    setLoading(false);
   };
 
   const handleButtonClick = async () => {
     clear();
+    setLoading(true);
     try {
       const res = await fetch(`https://letterboxd-rss-wrapper.herokuapp.com/rss?user=${username}`);
       if (!res.ok) {
         const msg: { error: string } = await res.json();
         setError(msg.error);
+        setLoading(false);
       } else {
         const diaryJSON = (await res.json()) as DiaryEntry[];
         const filteredDiary = diaryJSON.filter(d => d.type === DiaryEntryType.DIARY && d.review);
@@ -48,9 +52,11 @@ function App() {
 
         setOverallSentiment(overall);
         setIndividualSentiments(indivSentiments);
+        setLoading(false);
       }
     } catch (e) {
       setError(e.message);
+      setLoading(false);
     }
   };
 
@@ -78,7 +84,7 @@ function App() {
             Error: {error}
           </Grid>
         )}
-        {overallSentiment && (
+        {!loading && overallSentiment && (
           <>
             <Grid item xs>
               Overall: {overallSentiment.score}
@@ -88,17 +94,20 @@ function App() {
             </Grid>
           </>
         )}
+        {loading && <CircularProgress />}
       </Grid>
-      <Grid container direction="column" justify="center">
-        {individualSentiments.map(is => {
-          const key = `${is.review.movie}-${is.review.published}`;
-          return (
-            <Grid item xs key={key}>
-              <MovieReview reviewSentiment={is} />
-            </Grid>
-          );
-        })}
-      </Grid>
+      {!loading && (
+        <Grid container direction="column" justify="center">
+          {individualSentiments.map(is => {
+            const key = `${is.review.movie}-${is.review.published}`;
+            return (
+              <Grid item xs key={key}>
+                <MovieReview reviewSentiment={is} />
+              </Grid>
+            );
+          })}
+        </Grid>
+      )}
     </>
   );
 }
