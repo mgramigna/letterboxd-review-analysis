@@ -9,32 +9,49 @@ function App() {
   const [username, setUsername] = useState<string>('');
   const [overallSentiment, setOverallSentiment] = useState<Sentiment.AnalysisResult | null>(null);
   const [individualSentiments, setIndividualSentiments] = useState<ReviewSentiment[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const handleTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setUsername(event.target.value);
   };
 
+  const clear = () => {
+    setOverallSentiment(null);
+    setIndividualSentiments([]);
+    setError(null);
+  };
+
   const handleButtonClick = async () => {
-    const res = await fetch(`https://letterboxd-rss-wrapper.herokuapp.com/rss?user=${username}`);
-    const diaryJSON = (await res.json()) as DiaryEntry[];
-    const filteredDiary = diaryJSON.filter(d => d.type === DiaryEntryType.DIARY && d.review);
+    clear();
+    try {
+      const res = await fetch(`https://letterboxd-rss-wrapper.herokuapp.com/rss?user=${username}`);
+      if (!res.ok) {
+        const msg: { error: string } = await res.json();
+        setError(msg.error);
+      } else {
+        const diaryJSON = (await res.json()) as DiaryEntry[];
+        const filteredDiary = diaryJSON.filter(d => d.type === DiaryEntryType.DIARY && d.review);
 
-    const reviews: Review[] = filteredDiary.map(d => ({
-      entry: d,
-      movie: d.film.title,
-      review: d.review?.replace('\n', ' ') || '',
-      published: d.date.published
-    }));
+        const reviews: Review[] = filteredDiary.map(d => ({
+          entry: d,
+          movie: d.film.title,
+          review: d.review?.replace('\n', ' ') || '',
+          published: d.date.published
+        }));
 
-    const sentiment = new Sentiment();
-    const overall = sentiment.analyze(reviews.map(r => r.review).join(' '));
-    const indivSentiments: ReviewSentiment[] = reviews.map(r => ({
-      review: r,
-      sentiment: sentiment.analyze(r.review)
-    }));
+        const sentiment = new Sentiment();
+        const overall = sentiment.analyze(reviews.map(r => r.review).join(' '));
+        const indivSentiments: ReviewSentiment[] = reviews.map(r => ({
+          review: r,
+          sentiment: sentiment.analyze(r.review)
+        }));
 
-    setOverallSentiment(overall);
-    setIndividualSentiments(indivSentiments);
+        setOverallSentiment(overall);
+        setIndividualSentiments(indivSentiments);
+      }
+    } catch (e) {
+      setError(e.message);
+    }
   };
 
   return (
@@ -56,6 +73,11 @@ function App() {
             }}
           />
         </Grid>
+        {error && (
+          <Grid item xs>
+            Error: {error}
+          </Grid>
+        )}
         {overallSentiment && (
           <>
             <Grid item xs>
